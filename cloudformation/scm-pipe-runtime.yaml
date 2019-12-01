@@ -66,11 +66,11 @@ Resources:
                 - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
             build:
               commands:
-                - export DOCKER_IMAGE_NAME=application
-                - mvn -B clean install docker:build
+                - mvn package -Pnative -Dquarkus.native.container-build=true
+                - docker build -f src/main/docker/Dockerfile.native -t quarkus/quarkus-jaxrs-helloworld .
                 - DOCKER_IMAGE_TAG=$(date +%s)
                 - echo $DOCKER_IMAGE_TAG
-                - docker tag $DOCKER_IMAGE_NAME:latest $REPOSITORY_URI:$DOCKER_IMAGE_TAG
+                - docker tag quarkus/quarkus-jaxrs-helloworld:latest $REPOSITORY_URI:$DOCKER_IMAGE_TAG
                 - docker push $REPOSITORY_URI:$DOCKER_IMAGE_TAG
                 - aws cloudformation update-stack --stack-name $STACK_NAME --use-previous-template --capabilities CAPABILITY_IAM --parameters ParameterKey=Subnets,UsePreviousValue=true ParameterKey=VPC,UsePreviousValue=true ParameterKey=ServiceName,UsePreviousValue=true ParameterKey=DesiredCount,ParameterValue=1 ParameterKey=DockerImageTag,ParameterValue=$DOCKER_IMAGE_TAG
           cache:
